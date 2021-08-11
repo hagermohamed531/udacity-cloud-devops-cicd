@@ -7,16 +7,18 @@ commands:
       - run:
           name: Write env vars to .env
           command: |
-            echo ENVIRONMENT=$ENVIRONMENT > ./backend/.env
-            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION > ./backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR > ./backend/.env
-            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES > ./backend/.env
-            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS > ./backend/.env
-            echo TYPEORM_HOST=$TYPEORM_HOST > ./backend/.env
-            echo TYPEORM_PORT=$TYPEORM_PORT > ./backend/.env
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME > ./backend/.env
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD > ./backend/.env
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE > ./backend/.env
+            pwd
+            echo ENVIRONMENT=$ENVIRONMENT >> ./backend/.env
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> ./backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> ./backend/.env
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> ./backend/.env
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> ./backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> ./backend/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> ./backend/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ./backend/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ./backend/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ./backend/.env
+            cat ./backend/.env
 
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -58,7 +60,7 @@ commands:
             then
               cd ~/project/backend
               npm install
-              npm run migration:revert
+              npm run migrations:revert
             fi
 
 jobs:
@@ -264,12 +266,12 @@ jobs:
           name: Configure dotenv file
           command: |
             # your code here
-            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
+            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            echo ENVIRONMENT=production > ~/project/frontend/.env
-            echo "API_URL=${API_URL}" > ~/project/frontend/.env
-            cat ~/project/frontend.env
+            echo ENVIRONMENT=production >> ~/project/frontend/.env
+            echo "API_URL=${API_URL}" >> ~/project/frontend/.env
+            cat ~/project/frontend/.env
       - run:
           name: Build frontend
           command: |
