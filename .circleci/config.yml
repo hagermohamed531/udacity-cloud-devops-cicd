@@ -35,13 +35,11 @@ commands:
             aws s3 rm s3://udapeople-<< parameters.workflowID >> --recursive
             aws s3 rb s3://udapeople-<< parameters.workflowID >> --force
             aws cloudformation delete-stack --stack-name backend-<< parameters.workflowID >>
-            exit 1
       - run:
           name: Destroy frontend
           when: on_fail
           command: |
             aws cloudformation delete-stack --stack-name frontend-<< parameters.workflowID >>
-            exit 1
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -61,7 +59,6 @@ commands:
               cd ~/project/backend # ./backend
               npm install
               npm run migration:revert
-              exit 1
             fi
 
 jobs:
@@ -77,8 +74,8 @@ jobs:
           command: |
             cd ~/project/frontend #./frontend
             npm i
+            export API_URL=""
             npm run build
-            exit 1
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
@@ -96,7 +93,6 @@ jobs:
             cd ~/project/backend
             npm i
             npm run build
-            exit 1
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -135,10 +131,12 @@ jobs:
       - restore_cache:
           keys: [frontend-build]
       - run:
-          name: Test frontend
+          name: Scan frontend
           command: |
             cd ~/project/frontend
-            npm audit
+            npm i
+            npm audit --audit-level=critical > audit.log
+            tail audit.log -n 200
 
   scan-backend:
     docker:
@@ -148,10 +146,12 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - run:
-          name: Test backend
+          name: Scan backend
           command: |
             cd ~/project/backend
-            npm audit
+            npm i
+            npm audit --audit-level=critical > audit.log
+            tail audit.log -n 200
 
   deploy-infrastructure:
     docker:
@@ -169,7 +169,6 @@ jobs:
               --tags project=backend-${CIRCLE_WORKFLOW_ID} \
               --stack-name "backend-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
-            exit 1
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -178,7 +177,6 @@ jobs:
               --tags project=frontend-${CIRCLE_WORKFLOW_ID} \
               --stack-name "frontend-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
-            exit 1
       - run:
           name: Add backend IP to memstash
           command: |
@@ -187,14 +185,13 @@ jobs:
               --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID}" \
               --output text)
             echo "BACKEND_IP=${BACKEND_IP}"
-          curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
+            curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             $BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
             echo $BACKEND_IP >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
-            exit 1
       - persist_to_workspace:
           root: ~/
           paths:
@@ -216,7 +213,6 @@ jobs:
           command: |
             apk add --update ansible
             pip install awscli
-            exit 1
       - create-dotenv-file
       - run:
           name: Configure server
@@ -224,7 +220,6 @@ jobs:
             cat ~/project/.circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
-            exit 1
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID}
 
@@ -233,18 +228,17 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-        restore_cache:
+      - restore_cache:
           keys: [backend-build]
-        attach_workspace:
+      - attach_workspace:
           at: .
-        create-dotenv-file
+      - create-dotenv-file
       - run:
           name: Run migrations
           command: |
             cd ~/project/backend
             npm run migrations > migrations_log.txt
             cat ./migrations_log.txt
-            exit 1
       - run:
           name: Send migration results to memstash
           command: |
@@ -256,7 +250,6 @@ jobs:
               echo "Failure"
               curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID}
             fi
-            exit 1
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID}
 
@@ -292,9 +285,9 @@ jobs:
           command: |
             aws s3 cp ~/project/frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}"
       - persist_to_workspace:
-          root:
+          root: .
           paths:
-            - ~/project/frontend/dist
+            - ./frontend/dist
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID}
       - revert-migrations:
@@ -382,7 +375,7 @@ jobs:
               --no-paginate \
               --output text)
             echo $OLD_WORKFLOW_ID
-          curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --date "$OLD_WORKFLOW_ID" https://api.memstash.io/values/OLD_WORKFLOW_ID
+            curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --date "$OLD_WORKFLOW_ID" https://api.memstash.io/values/OLD_WORKFLOW_ID
       - run:
           name: Update cloudfront distribution
           command: |
@@ -396,7 +389,7 @@ jobs:
       - revert-migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID}
 
-cleanup:
+  cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
