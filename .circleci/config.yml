@@ -281,7 +281,7 @@ jobs:
       - run:
           name: Deploy frontend artifacts to s3
           command: |
-            aws s3 cp ~/project/frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}"
+            aws s3 cp ~/project/frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --recursive
       - persist_to_workspace:
           root: .
           paths:
@@ -340,9 +340,9 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            $BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
+            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
             export API_URL="http://${BACKEND_IP}:3030"
-            echo $API_URL
+            echo "$API_URL"
             curl -s "${API_URL}/api/status" -v
       - run:
           name: Frontend smoke test.
