@@ -348,9 +348,9 @@ jobs:
           name: Frontend smoke test.
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-eu-central-1.amazonaws.com"
-            curl -s $URL | grep "Welcome"
-            #- destroy-environment:
-            #    workflowID: ${CIRCLE_WORKFLOW_ID}
+            curl -s "$URL" | grep "Welcome"
+      - destroy-environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID}
       - revert-migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID}
 
