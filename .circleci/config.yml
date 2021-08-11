@@ -54,9 +54,9 @@ commands:
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
             SUCCESS=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/DB_MIGRATION_STATUS_<< parameters.workflowID >>)
             echo $SUCCESS
-            if(( $SUCCESS==1 ));
+            if(( $SUCCESS=="success" ));
             then
-              cd ~/project/backend # ./backend
+              cd ~/project/backend
               npm install
               npm run migration:revert
             fi
@@ -72,9 +72,8 @@ jobs:
       - run:
           name: Build front-end
           command: |
-            cd ~/project/frontend #./frontend
+            cd ~/project/frontend
             npm i
-            export API_URL=""
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
@@ -134,7 +133,6 @@ jobs:
           name: Scan frontend
           command: |
             cd ~/project/frontend
-            npm i
             npm audit --audit-level=critical > audit.log
             tail audit.log -n 200
 
@@ -149,7 +147,6 @@ jobs:
           name: Scan backend
           command: |
             cd ~/project/backend
-            npm i
             npm audit --audit-level=critical > audit.log
             tail audit.log -n 200
 
@@ -160,7 +157,7 @@ jobs:
       - checkout
       - run:
           name: Install required dependencies
-          command: yum -u install tar gzip
+          command: yum -y install tar gzip
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -213,7 +210,6 @@ jobs:
           command: |
             apk add --update ansible
             pip install awscli
-      - create-dotenv-file
       - run:
           name: Configure server
           command: |
@@ -265,7 +261,7 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_10.x | bash -
             yum install -y nodejs
       - run:
-          name: Get backend url
+          name: Configure dotenv file
           command: |
             # your code here
             $BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
@@ -281,7 +277,7 @@ jobs:
             npm i
             npm run build
       - run:
-          name: Deploy frontend objects
+          name: Deploy frontend artifacts to s3
           command: |
             aws s3 cp ~/project/frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}"
       - persist_to_workspace:
@@ -318,7 +314,7 @@ jobs:
           command: |
             tar czf backend.tar.gz backend
             export ANSIBLE_HOST_KEY_CHECKING=false
-            ansible-playbook -i ./.circleci/ansible/inventory.txt
+            ansible-playbook -i ./.circleci/ansible/inventory.txt ./.circleci/ansible/deploy-backend.yml
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID}
       - revert-migrations:
@@ -375,7 +371,7 @@ jobs:
               --no-paginate \
               --output text)
             echo $OLD_WORKFLOW_ID
-            curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --date "$OLD_WORKFLOW_ID" https://api.memstash.io/values/OLD_WORKFLOW_ID
+            curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "$OLD_WORKFLOW_ID" https://api.memstash.io/values/OLD_WORKFLOW_ID
       - run:
           name: Update cloudfront distribution
           command: |
