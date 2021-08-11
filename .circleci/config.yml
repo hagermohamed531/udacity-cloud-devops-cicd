@@ -186,8 +186,8 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            $BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
-            echo $BACKEND_IP >> ~/project/.circleci/ansible/inventory.txt
+            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
+            echo "$BACKEND_IP" >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
@@ -202,7 +202,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["66:a8:e4:b9:dc:25:0b:fa:f1:41:4f:aa:dd:79:c5:17"]
+          fingerprints: ["83:ad:4f:1f:1b:67:de:8e:61:c0:c7:89:24:8f:d3:4f"]
       - attach_workspace:
           at: .
       - run:
@@ -264,11 +264,11 @@ jobs:
           name: Configure dotenv file
           command: |
             # your code here
-            $BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
+            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo ENVIRONMENT=production > ~/project/frontend/.env
-            echo API_URL=${API_URL} > ~/project/frontend/.env
+            echo "API_URL=${API_URL}" > ~/project/frontend/.env
             cat ~/project/frontend.env
       - run:
           name: Build frontend
@@ -295,7 +295,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["66:a8:e4:b9:dc:25:0b:fa:f1:41:4f:aa:dd:79:c5:17"]
+          fingerprints: ["83:ad:4f:1f:1b:67:de:8e:61:c0:c7:89:24:8f:d3:4f"]
       - attach_workspace:
           at: .
       - restore_cache:
