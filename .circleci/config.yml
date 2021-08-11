@@ -343,16 +343,16 @@ jobs:
             BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
             export API_URL="http://${BACKEND_IP}:3030"
             echo "$API_URL"
-            curl -s "${API_URL}/api/status" -vvv
+            curl -s "${API_URL}/api/status" -v
       - run:
           name: Frontend smoke test.
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-eu-central-1.amazonaws.com"
             curl -s $URL | grep "Welcome"
-            #  - destroy-environment:
-            #      workflowID: ${CIRCLE_WORKFLOW_ID}
-            #  - revert-migrations:
-            #      workflowID: ${CIRCLE_WORKFLOW_ID}
+      - destroy-environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID}
 
   cloudfront-update:
     docker:
