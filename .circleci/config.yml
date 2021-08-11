@@ -208,8 +208,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints:
-            - "@TODO: ssh fingerprint"
+          fingerprints: ["66:a8:e4:b9:dc:25:0b:fa:f1:41:4f:aa:dd:79:c5:17"]
       - attach_workspace:
           at: .
       - run:
@@ -307,8 +306,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints:
-            - "@TODO"
+          fingerprints: ["66:a8:e4:b9:dc:25:0b:fa:f1:41:4f:aa:dd:79:c5:17"]
       - attach_workspace:
           at: .
       - restore_cache:
