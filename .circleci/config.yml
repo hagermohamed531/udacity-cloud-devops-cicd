@@ -54,7 +54,7 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/DB_MIGRATION_STATUS_<< parameters.workflowID >>)
+            SUCCESS=$(curl -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request GET https://api.memstash.io/values/DB_MIGRATION_STATUS_<< parameters.workflowID >>)
             echo $SUCCESS
             if(( $SUCCESS=="success" ));
             then
@@ -184,11 +184,11 @@ jobs:
               --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID}" \
               --output text)
             echo "BACKEND_IP=${BACKEND_IP}"
-            curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
+            curl -H "Content-Type: text/plain" -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request PUT --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID}
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
+            BACKEND_IP=$(curl -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
             echo "$BACKEND_IP" >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
       - persist_to_workspace:
@@ -243,10 +243,10 @@ jobs:
             if grep "has been executed successfull" ~/project/backend/migrations_log.txt;
             then
               echo "Successful"
-              curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID}
+              curl -H "Content-Type: text/plain" -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID}
             else
               echo "Failure"
-              curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID}
+              curl -H "Content-Type: text/plain" -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID}
             fi
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID}
@@ -266,7 +266,7 @@ jobs:
           name: Configure dotenv file
           command: |
             # your code here
-            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
+            BACKEND_IP=$(curl -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo ENVIRONMENT=production >> ~/project/frontend/.env
@@ -340,7 +340,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            BACKEND_IP=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
+            BACKEND_IP=$(curl -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request GET https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID})
             export API_URL="http://${BACKEND_IP}:3030"
             echo "$API_URL"
             curl -s "${API_URL}/api/status" -v
@@ -373,7 +373,7 @@ jobs:
               --no-paginate \
               --output text)
             echo $OLD_WORKFLOW_ID
-            curl -H "Content-Type: text/plain" -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request PUT --data "$OLD_WORKFLOW_ID" https://api.memstash.io/values/OLD_WORKFLOW_ID
+            curl -H "Content-Type: text/plain" -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request PUT --data "$OLD_WORKFLOW_ID" https://api.memstash.io/values/OLD_WORKFLOW_ID
       - run:
           name: Update cloudfront distribution
           command: |
@@ -396,7 +396,7 @@ jobs:
           name: Get old stack workflow id
           command: |
             # your code here
-            export OldWorkflowID=$(curl -H "token: 7eb3bef9-f1a7-44a1-9ff7-22631e3f0b0e" --request GET https://api.memstash.io/values/OLD_WORKFLOW_ID)
+            export OldWorkflowID=$(curl -H "token: 6a3ae534-27b0-46a8-832e-23ee1d810653" --request GET https://api.memstash.io/values/OLD_WORKFLOW_ID)
       - run:
           name: Remove old stacks and files
           command: |
