@@ -281,6 +281,7 @@ jobs:
       - run:
           name: Deploy frontend artifacts to s3
           command: |
+            aws s3api create-bucket --bucket "udapeople-${CIRCLE_WORKFLOW_ID}" --create-bucket-configuration LocationConstraint=eu-central-1
             aws s3 cp ~/project/frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --recursive
       - persist_to_workspace:
           root: .
